@@ -215,6 +215,91 @@
     animation: cardFlip 0.6s ease-in-out;
 }
 
+/* Card dealing animations */
+.card.dealing {
+    animation: dealCard 0.8s ease-out forwards;
+}
+
+.card.dealing-from-deck {
+    animation: dealFromDeck 0.8s ease-out forwards;
+}
+
+@keyframes dealCard {
+    0% {
+        transform: translateX(-200px) translateY(-100px) rotate(-15deg);
+        opacity: 0;
+        scale: 0.8;
+    }
+    50% {
+        transform: translateX(-100px) translateY(-50px) rotate(-7deg);
+        opacity: 0.5;
+        scale: 0.9;
+    }
+    100% {
+        transform: translateX(0) translateY(0) rotate(0deg);
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+@keyframes dealFromDeck {
+    0% {
+        transform: translateX(0) translateY(0) rotate(0deg);
+        opacity: 0;
+        scale: 0.5;
+    }
+    50% {
+        transform: translateX(50px) translateY(-25px) rotate(5deg);
+        opacity: 0.7;
+        scale: 0.8;
+    }
+    100% {
+        transform: translateX(100px) translateY(-50px) rotate(10deg);
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+/* Community card dealing */
+.community-cards .card.dealing {
+    animation: dealCommunityCard 1s ease-out forwards;
+}
+
+@keyframes dealCommunityCard {
+    0% {
+        transform: translateY(-150px) scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: translateY(-75px) scale(0.9);
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Player card dealing */
+.player-hand .card.dealing {
+    animation: dealPlayerCard 1s ease-out forwards;
+}
+
+@keyframes dealPlayerCard {
+    0% {
+        transform: translateY(-100px) translateX(-50px) scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: translateY(-50px) translateX(-25px) scale(0.9);
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(0) translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
 @keyframes cardFlip {
     0% { transform: rotateY(0deg); }
     50% { transform: rotateY(90deg); }
@@ -425,6 +510,64 @@
     gap: 1rem;
 }
 
+/* Folding animation styles */
+.player-hand.folded .hand-cards {
+    animation: foldCards 1.5s ease-in-out forwards;
+}
+
+.player-hand.folded .hand-cards .card {
+    animation: cardFold 1.5s ease-in-out forwards;
+}
+
+@keyframes foldCards {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-100px) rotate(15deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(-200px) rotate(30deg);
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+@keyframes cardFold {
+    0% {
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+    50% {
+        transform: translateY(-100px) rotate(15deg) scale(0.9);
+    }
+    100% {
+        transform: translateY(-200px) rotate(30deg) scale(0.8);
+    }
+}
+
+/* Hidden state for folded cards */
+.player-hand.folded .hand-cards .card {
+    visibility: hidden;
+}
+
+/* Reset animation for new round */
+.player-hand:not(.folded) .hand-cards {
+    animation: resetCards 0.5s ease-out;
+}
+
+@keyframes resetCards {
+    0% {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 .player-info {
     text-align: right;
 }
@@ -566,6 +709,45 @@
     color: var(--accent-gold);
     min-width: 100px;
     text-align: center;
+}
+
+/* Clickable bet amount styling */
+.clickable-bet-amount {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    user-select: none;
+}
+
+.clickable-bet-amount:hover {
+    background: rgba(255, 215, 0, 0.1);
+    transform: scale(1.05);
+}
+
+.clickable-bet-amount.editing {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Custom bet input field */
+.custom-bet-input {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-align: center;
+    width: 80px;
+    outline: none;
+}
+
+.custom-bet-input:focus {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 .action-buttons {

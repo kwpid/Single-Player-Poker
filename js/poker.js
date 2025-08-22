@@ -121,7 +121,36 @@ class PokerGame {
         
         this.dealerIndex = Math.floor(Math.random() * this.players.length);
         this.setupGameUI();
+        
+        // Update bet slider max value
+        this.updateBetSliderMax();
+        
         this.startNewHand();
+    }
+    
+    // Update bet slider max value based on player chips
+    updateBetSliderMax() {
+        const betSlider = document.getElementById('betSlider');
+        if (betSlider && this.players[0]) {
+            const playerChips = this.players[0].chips;
+            const maxBet = Math.min(playerChips, 500); // Cap at 500 or current chips
+            betSlider.max = maxBet.toString();
+            
+            // Update current bet value if it exceeds max
+            if (parseInt(betSlider.value) > maxBet) {
+                betSlider.value = maxBet.toString();
+                // Update bet amount display
+                const betAmount = document.getElementById('betAmount');
+                if (betAmount) {
+                    betAmount.textContent = maxBet;
+                }
+            }
+        }
+    }
+    
+    // Get current player chips for external use
+    getPlayerChips() {
+        return this.players[0] ? this.players[0].chips : this.startingChips;
     }
     
     setupGameUI() {
@@ -310,16 +339,39 @@ class PokerGame {
     displayPlayerCards() {
         const humanPlayer = this.players[0];
         if (humanPlayer.hand.length >= 2) {
-            this.displayCard(this.playerCard1, humanPlayer.hand[0]);
-            this.displayCard(this.playerCard2, humanPlayer.hand[1]);
+            // Deal first card with animation
+            setTimeout(() => {
+                this.displayCard(this.playerCard1, humanPlayer.hand[0]);
+                this.playerCard1.classList.add('dealing');
+                setTimeout(() => {
+                    this.playerCard1.classList.remove('dealing');
+                }, 1000);
+            }, 200);
+            
+            // Deal second card with animation
+            setTimeout(() => {
+                this.displayCard(this.playerCard2, humanPlayer.hand[1]);
+                this.playerCard2.classList.add('dealing');
+                setTimeout(() => {
+                    this.playerCard2.classList.remove('dealing');
+                }, 1000);
+            }, 800);
         }
         
-        // Update AI player card backs
+        // Update AI player card backs with animations
         for (let i = 1; i < this.players.length; i++) {
             const playerElement = document.getElementById(`player-${this.players[i].name}`);
             if (playerElement && this.players[i].chips > 0) {
                 const cards = playerElement.querySelectorAll('.opponent-cards .card');
-                cards.forEach(card => card.classList.add('hidden'));
+                cards.forEach((card, cardIndex) => {
+                    // Add dealing animation for AI cards
+                    setTimeout(() => {
+                        card.classList.add('dealing');
+                        setTimeout(() => {
+                            card.classList.remove('dealing');
+                        }, 1000);
+                    }, 400 + (i * 200) + (cardIndex * 100));
+                });
             }
         }
     }
@@ -483,6 +535,11 @@ class PokerGame {
             case 'fold':
                 currentPlayer.folded = true;
                 actionText = 'Folds';
+                
+                // Add folding animation for human player
+                if (currentPlayer.isHuman) {
+                    this.animatePlayerFold();
+                }
                 break;
                 
             case 'call':
@@ -537,6 +594,20 @@ class PokerGame {
         }, 1500);
         
         this.updateUI();
+    }
+    
+    // Animate player folding
+    animatePlayerFold() {
+        const playerHand = document.querySelector('.player-hand');
+        if (playerHand) {
+            // Add folded class to trigger CSS animation
+            playerHand.classList.add('folded');
+            
+            // Remove folded class after animation completes
+            setTimeout(() => {
+                playerHand.classList.remove('folded');
+            }, 2000); // Slightly longer than animation duration
+        }
     }
     
     showPlayerAction(player, action) {
@@ -649,8 +720,15 @@ class PokerGame {
             if (cardElements[i]) {
                 setTimeout(() => {
                     this.displayCard(cardElements[i], this.communityCards[i]);
+                    
+                    // Add dealing animation
+                    cardElements[i].classList.add('dealing');
+                    setTimeout(() => {
+                        cardElements[i].classList.remove('dealing');
+                    }, 1000);
+                    
                     Utils.playSound('card');
-                }, i * 200); // Slight delay between each card for better animation
+                }, i * 300); // Increased delay between each card for better animation
             }
         }
     }

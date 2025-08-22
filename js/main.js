@@ -44,6 +44,9 @@ class GameApp {
         // Regenerate leaderboards with new AI names if needed
         this.regenerateLeaderboardsIfNeeded();
         
+        // Update ranked button display on initialization
+        this.updateRankedButtonDisplay();
+        
         // Show main menu
         this.showScreen('mainMenu');
     }
@@ -70,6 +73,33 @@ class GameApp {
         // Update ELO display
         const playerElo = this.eloSystem.getPlayerRating();
         document.getElementById('playerElo').textContent = playerElo;
+        
+        // Update ranked button display
+        this.updateRankedButtonDisplay();
+    }
+    
+    updateRankedButtonDisplay() {
+        const rankedRankText = document.getElementById('rankedRankText');
+        const rankedEloText = document.getElementById('rankedEloText');
+        
+        if (rankedRankText && rankedEloText) {
+            // Get ranked stats
+            const rankedStats = this.rankedSystem.getRankedStats();
+            const playerElo = this.eloSystem.getPlayerRating();
+            
+            // Update rank text
+            if (rankedStats.isRanked) {
+                rankedRankText.textContent = rankedStats.rank;
+                // Add color styling based on rank
+                rankedRankText.style.color = rankedStats.rankInfo.color;
+            } else {
+                rankedRankText.textContent = 'Unranked';
+                rankedRankText.style.color = 'var(--accent-gold)'; // Default gold color
+            }
+            
+            // Update ELO text
+            rankedEloText.textContent = `${playerElo} ELO`;
+        }
     }
     
     setupEventListeners() {
@@ -211,8 +241,116 @@ class GameApp {
             }
         });
         
+        // Custom bet input functionality
+        this.setupCustomBetInput();
+        
         // Page visibility and unload events for refresh detection
         this.setupRefreshDetection();
+    }
+    
+    setupCustomBetInput() {
+        const betAmount = document.getElementById('betAmount');
+        const betSlider = document.getElementById('betSlider');
+        
+        if (betAmount && betSlider) {
+            betAmount.addEventListener('click', () => {
+                this.enableCustomBetInput();
+            });
+            
+            // Update slider when custom input changes
+            betSlider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                this.updateBetAmount(value);
+            });
+        }
+    }
+    
+    enableCustomBetInput() {
+        const betAmount = document.getElementById('betAmount');
+        const betSlider = document.getElementById('betSlider');
+        
+        if (!betAmount || !betSlider) return;
+        
+        // Get current player chips for max bet
+        const currentChips = this.pokerGame ? this.pokerGame.getPlayerChips() : 500;
+        const maxBet = Math.min(currentChips, 500); // Cap at 500 or current chips
+        
+        // Create input field
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'custom-bet-input';
+        input.min = '0';
+        input.max = maxBet.toString();
+        input.value = betAmount.textContent;
+        input.placeholder = `0-${maxBet}`;
+        
+        // Replace bet amount with input
+        betAmount.style.display = 'none';
+        betAmount.parentNode.insertBefore(input, betAmount);
+        
+        // Focus and select input
+        input.focus();
+        input.select();
+        
+        // Handle input events
+        input.addEventListener('blur', () => {
+            this.finalizeCustomBet(input);
+        });
+        
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.finalizeCustomBet(input);
+            } else if (e.key === 'Escape') {
+                this.cancelCustomBet(input);
+            }
+        });
+        
+        // Update slider to match input
+        input.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value) || 0;
+            const clampedValue = Math.max(0, Math.min(value, maxBet));
+            betSlider.value = clampedValue;
+        });
+    }
+    
+    finalizeCustomBet(input) {
+        const betAmount = document.getElementById('betAmount');
+        const betSlider = document.getElementById('betSlider');
+        
+        if (!betAmount || !betSlider) return;
+        
+        const value = parseInt(input.value) || 0;
+        const maxBet = parseInt(input.max);
+        const clampedValue = Math.max(0, Math.min(value, maxBet));
+        
+        // Update bet amount and slider
+        this.updateBetAmount(clampedValue);
+        betSlider.value = clampedValue;
+        
+        // Remove input and show bet amount
+        input.remove();
+        betAmount.style.display = 'inline';
+        
+        // Update slider max if needed
+        if (this.pokerGame) {
+            const currentChips = this.pokerGame.getPlayerChips();
+            betSlider.max = Math.min(currentChips, 500).toString();
+        }
+    }
+    
+    cancelCustomBet(input) {
+        const betAmount = document.getElementById('betAmount');
+        if (betAmount) {
+            input.remove();
+            betAmount.style.display = 'inline';
+        }
+    }
+    
+    updateBetAmount(amount) {
+        const betAmount = document.getElementById('betAmount');
+        if (betAmount) {
+            betAmount.textContent = amount;
+        }
     }
     
     setupRefreshDetection() {
@@ -700,6 +838,9 @@ class GameApp {
         const rankedStats = this.rankedSystem.getRankedStats();
         const seasonInfo = this.rankedSystem.getSeasonInfo();
         
+        // Update ranked button display to ensure consistency
+        this.updateRankedButtonDisplay();
+        
         let infoHTML = '';
         
         if (rankedStats.isRanked) {
@@ -920,8 +1061,9 @@ class GameApp {
         // Update UI with results
         this.displayGameResults(gameResult, xpResult, rankedResult);
         
-        // Refresh user data
+        // Refresh user data and ranked button display
         this.loadUserData();
+        this.updateRankedButtonDisplay();
         
         // Reset game mode to casual for next game
         this.currentGameMode = 'casual';

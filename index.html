@@ -43,6 +43,10 @@
                 <button class="game-button" id="rankedBtn">
                     <i class="fas fa-crown"></i>
                     <span>Ranked</span>
+                    <div class="ranked-info-display">
+                        <span class="rank-text" id="rankedRankText">Unranked</span>
+                        <span class="elo-text" id="rankedEloText">600 ELO</span>
+                    </div>
                 </button>
                 <button class="game-button secondary" id="tutorialBtn">
                     <i class="fas fa-graduation-cap"></i>
@@ -162,7 +166,7 @@
                 <div class="bet-amount-container">
                     <input type="range" id="betSlider" min="0" max="500" value="100" class="bet-slider">
                     <div class="bet-display">
-                        $<span id="betAmount">100</span>
+                        $<span id="betAmount" class="clickable-bet-amount">100</span>
                     </div>
                 </div>
                 <div class="action-buttons">
