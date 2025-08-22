@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Poker - Professional Casino Gaming</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/game.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Main Menu Screen -->
+    <div id="mainMenu" class="screen active">
+        <div class="menu-background">
+            <div class="casino-lights"></div>
+        </div>
+        
+        <div class="menu-container">
+            <div class="game-logo">
+                <h1><i class="fas fa-spade-alt"></i> DARK POKER</h1>
+                <p class="tagline">Professional Casino Gaming</p>
+            </div>
+            
+            <div class="user-info">
+                <div class="player-card">
+                    <i class="fas fa-user-circle"></i>
+                    <div class="player-details">
+                        <span class="username" id="playerUsername">Player</span>
+                        <div class="elo-display">
+                            <i class="fas fa-trophy"></i>
+                            <span id="playerElo">1000</span> ELO
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-buttons">
+                <button class="game-button primary" id="casualQueueBtn">
+                    <i class="fas fa-play"></i>
+                    <span>Casual Queue</span>
+                </button>
+                <button class="game-button disabled" id="rankedBtn">
+                    <i class="fas fa-crown"></i>
+                    <span>Ranked</span>
+                    <small>Coming Soon</small>
+                </button>
+                <button class="game-button secondary" id="tutorialBtn">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Tutorial</span>
+                </button>
+                <button class="game-button disabled" id="inventoryBtn">
+                    <i class="fas fa-box"></i>
+                    <span>Inventory</span>
+                    <small>Coming Soon</small>
+                </button>
+            </div>
+
+            <div class="secondary-buttons">
+                <button class="menu-button disabled" id="leaderboardBtn">
+                    <i class="fas fa-medal"></i>
+                    <span>Leaderboards</span>
+                    <small>Coming Soon</small>
+                </button>
+                <button class="menu-button" id="settingsBtn">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </button>
+                <button class="menu-button" id="helpBtn">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Queue Screen -->
+    <div id="queueScreen" class="screen">
+        <div class="queue-container">
+            <div class="queue-header">
+                <h2><i class="fas fa-search"></i> Finding Game...</h2>
+                <p>Searching for opponents in casual mode</p>
+            </div>
+            
+            <div class="queue-animation">
+                <div class="poker-chips">
+                    <div class="chip chip-1"></div>
+                    <div class="chip chip-2"></div>
+                    <div class="chip chip-3"></div>
+                </div>
+                <div class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            
+            <div class="queue-timer">
+                <span id="queueTime">0:00</span>
+            </div>
+            
+            <button class="cancel-button" id="cancelQueueBtn">
+                <i class="fas fa-times"></i>
+                Cancel Queue
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <div class="game-container">
+            <!-- Game Header -->
+            <div class="game-header">
+                <div class="pot-info">
+                    <div class="pot-display">
+                        <i class="fas fa-coins"></i>
+                        <span>Pot: $<span id="potAmount">0</span></span>
+                    </div>
+                </div>
+                <div class="game-controls">
+                    <button class="control-btn" id="gameMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Community Cards -->
+            <div class="community-cards">
+                <div class="card-container">
+                    <div class="card hidden" id="flop1"></div>
+                    <div class="card hidden" id="flop2"></div>
+                    <div class="card hidden" id="flop3"></div>
+                    <div class="card hidden" id="turn"></div>
+                    <div class="card hidden" id="river"></div>
+                </div>
+            </div>
+
+            <!-- Players Area -->
+            <div class="players-area">
+                <!-- AI Players will be dynamically added here -->
+            </div>
+
+            <!-- Player Hand -->
+            <div class="player-hand">
+                <div class="hand-cards">
+                    <div class="card" id="playerCard1"></div>
+                    <div class="card" id="playerCard2"></div>
+                </div>
+                <div class="player-info">
+                    <div class="player-name" id="playerName">You</div>
+                    <div class="player-chips">
+                        <i class="fas fa-coins"></i>
+                        $<span id="playerChips">5000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Betting Controls -->
+            <div class="betting-controls" id="bettingControls">
+                <div class="bet-amount-container">
+                    <input type="range" id="betSlider" min="0" max="5000" value="100" class="bet-slider">
+                    <div class="bet-display">
+                        $<span id="betAmount">100</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn fold" id="foldBtn">
+                        <i class="fas fa-flag"></i>
+                        Fold
+                    </button>
+                    <button class="action-btn call" id="callBtn">
+                        <i class="fas fa-check"></i>
+                        <span id="callText">Call</span>
+                    </button>
+                    <button class="action-btn raise" id="raiseBtn">
+                        <i class="fas fa-arrow-up"></i>
+                        Raise
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Messages -->
+            <div class="game-messages" id="gameMessages">
+                <div class="message">Game starting...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Results Screen -->
+    <div id="resultsScreen" class="screen">
+        <div class="results-container">
+            <div class="results-header">
+                <h2><i class="fas fa-trophy"></i> Game Results</h2>
+            </div>
+            
+            <div class="final-standings" id="finalStandings">
+                <!-- Results will be populated here -->
+            </div>
+            
+            <div class="elo-changes" id="eloChanges">
+                <!-- ELO changes will be shown here -->
+            </div>
+            
+            <div class="results-actions">
+                <button class="game-button primary" id="reQueueBtn">
+                    <i class="fas fa-redo"></i>
+                    Play Again
+                </button>
+                <button class="game-button secondary" id="returnToMenuBtn">
+                    <i class="fas fa-home"></i>
+                    Main Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+                <button class="close-btn" id="closeSettingsBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="usernameInput">Username:</label>
+                    <input type="text" id="usernameInput" maxlength="20" placeholder="Enter username">
+                    <button class="save-btn" id="saveUsernameBtn">Save</button>
+                </div>
+                <div class="setting-group">
+                    <label>Sound Effects:</label>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="soundToggle" checked>
+                        <label for="soundToggle" class="slider"></label>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label>Animations:</label>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="animationsToggle" checked>
+                        <label for="animationsToggle" class="slider"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> Help & Rules</h3>
+                <button class="close-btn" id="closeHelpBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h4>Game Objective</h4>
+                    <p>Be the last player with chips to win the game. Each player starts with $5,000 in chips.</p>
+                </div>
+                <div class="help-section">
+                    <h4>Texas Hold'em Rules</h4>
+                    <ul>
+                        <li>Each player receives 2 private cards</li>
+                        <li>5 community cards are dealt (Flop, Turn, River)</li>
+                        <li>Make the best 5-card hand using any combination</li>
+                        <li>Betting rounds occur before flop, after flop, turn, and river</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4>Hand Rankings (High to Low)</h4>
+                    <ol>
+                        <li>Royal Flush</li>
+                        <li>Straight Flush</li>
+                        <li>Four of a Kind</li>
+                        <li>Full House</li>
+                        <li>Flush</li>
+                        <li>Straight</li>
+                        <li>Three of a Kind</li>
+                        <li>Two Pair</li>
+                        <li>One Pair</li>
+                        <li>High Card</li>
+                    </ol>
+                </div>
+                <div class="help-section">
+                    <h4>ELO System</h4>
+                    <p>Gain ELO points for good placements:<br>
+                    1st Place: +25-40 ELO<br>
+                    2nd Place: +10-20 ELO<br>
+                    3rd Place: +5-15 ELO<br>
+                    4th+ Place: 0-5 ELO</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/elo.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/poker.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
