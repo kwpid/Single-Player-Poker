@@ -11,10 +11,13 @@ class GameApp {
         this.queueTimer = null;
         this.queueStartTime = null;
         this.currentGameMode = 'casual'; // 'casual' or 'ranked'
+        this.gameInProgress = false; // Track if a game is currently active
+        this.gameStartTime = null; // Track when the current game started
         
         this.initializeApp();
         this.setupEventListeners();
         this.loadUserData();
+        this.checkForGameRefresh(); // Check if player refreshed during a game
     }
     
     initializeApp() {
@@ -207,6 +210,68 @@ class GameApp {
                 this.saveUsername();
             }
         });
+        
+        // Page visibility and unload events for refresh detection
+        this.setupRefreshDetection();
+    }
+    
+    setupRefreshDetection() {
+        // Track page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (this.gameInProgress && document.hidden) {
+                // Player switched tabs or minimized during game
+                Utils.saveGameData('gameTabSwitchTime', Date.now());
+            } else if (this.gameInProgress && !document.hidden) {
+                // Player returned to tab
+                const tabSwitchTime = Utils.loadGameData('gameTabSwitchTime', 0);
+                if (tabSwitchTime > 0) {
+                    const timeAway = Date.now() - tabSwitchTime;
+                    if (timeAway > 30000) { // More than 30 seconds away
+                        console.warn('Player was away from game for extended period. Applying penalty.');
+                        const penaltyResult = this.eloSystem.applyPenalty(50);
+                        this.showPenaltyMessage(penaltyResult);
+                    }
+                }
+            }
+        });
+        
+        // Track page unload (refresh, close, navigation)
+        window.addEventListener('beforeunload', (e) => {
+            if (this.gameInProgress) {
+                // Mark that player is leaving during game
+                Utils.saveGameData('gameLeftTime', Date.now());
+                Utils.saveGameData('gameLeftDuringPlay', true);
+                
+                // Show warning message
+                e.preventDefault();
+                e.returnValue = 'You have an active game in progress. Leaving now will result in an ELO penalty. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        });
+        
+        // Track page load to detect refresh during game
+        window.addEventListener('load', () => {
+            const gameLeftDuringPlay = Utils.loadGameData('gameLeftDuringPlay', false);
+            const gameLeftTime = Utils.loadGameData('gameLeftTime', 0);
+            
+            if (gameLeftDuringPlay && gameLeftTime > 0) {
+                const timeSinceLeft = Date.now() - gameLeftTime;
+                
+                // Check if this was a legitimate exit
+                if (!this.eloSystem.isLegitimateExit()) {
+                    // If they left very recently (within 5 seconds), it's likely a refresh
+                    if (timeSinceLeft < 5000) {
+                        console.warn('Player refreshed during active game. Applying penalty.');
+                        const penaltyResult = this.eloSystem.applyPenalty(100);
+                        this.showPenaltyMessage(penaltyResult);
+                    }
+                }
+                
+                // Clear the flags
+                Utils.saveGameData('gameLeftDuringPlay', false);
+                Utils.saveGameData('gameLeftTime', 0);
+            }
+        });
     }
     
     handleKeyPress(e) {
@@ -395,6 +460,12 @@ class GameApp {
             this.queueTimer = null;
         }
         
+        // Reset game state if queue was cancelled
+        this.gameInProgress = false;
+        this.gameStartTime = null;
+        Utils.saveGameData('gameInProgress', false);
+        Utils.saveGameData('gameStartTime', 0);
+        
         this.showScreen('mainMenu');
     }
     
@@ -424,6 +495,14 @@ class GameApp {
     startGame() {
         this.showScreen('gameScreen');
         
+        // Set game state to active
+        this.gameInProgress = true;
+        this.gameStartTime = Date.now();
+        
+        // Save game start time to localStorage for refresh detection
+        Utils.saveGameData('gameStartTime', this.gameStartTime);
+        Utils.saveGameData('gameInProgress', true);
+        
         // Game settings based on mode
         const gameSettings = {
             gameMode: this.currentGameMode,
@@ -447,6 +526,14 @@ class GameApp {
         
         // Override to handle our app flow
         this.pokerGame.showResults = (standings, eloResult) => {
+            // End the game state
+            this.gameInProgress = false;
+            this.gameStartTime = null;
+            
+            // Save game end time for refresh detection
+            Utils.saveGameData('gameEndTime', Date.now());
+            Utils.saveGameData('gameInProgress', false);
+            
             // Call original method
             originalShowResults(standings, eloResult);
             
@@ -1108,6 +1195,100 @@ class GameApp {
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = minutes % 60;
         return `${hours}:${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+
+    checkForGameRefresh() {
+        const gameInProgress = Utils.loadGameData('gameInProgress', false);
+        const gameStartTime = Utils.loadGameData('gameStartTime', 0);
+        const gameEndTime = Utils.loadGameData('gameEndTime', 0);
+        const currentTime = Date.now();
+        
+        // Check if there was an active game that wasn't properly ended
+        if (gameInProgress && gameStartTime > 0) {
+            const timeSinceGameStart = currentTime - gameStartTime;
+            const timeSinceGameEnd = gameEndTime > 0 ? currentTime - gameEndTime : 0;
+            
+            // If game started more than 30 seconds ago and no end time recorded, likely a refresh
+            if (timeSinceGameStart > 30000 && (gameEndTime === 0 || timeSinceGameEnd < 10000)) {
+                console.warn('Player refreshed during an active game. Applying ELO penalty.');
+                
+                // Calculate penalty based on game duration (longer game = bigger penalty)
+                const penaltyAmount = Math.min(150, Math.max(50, Math.floor(timeSinceGameStart / 60000) * 25));
+                
+                // Apply penalty
+                const penaltyResult = this.eloSystem.applyPenalty(penaltyAmount);
+                
+                // Show penalty message
+                this.showPenaltyMessage(penaltyResult);
+                
+                // Reset game state
+                this.gameInProgress = false;
+                this.gameStartTime = null;
+                Utils.saveGameData('gameInProgress', false);
+                Utils.saveGameData('gameStartTime', 0);
+                
+                // Update UI
+                this.loadUserData();
+            }
+        }
+        
+        // Also check for very recent game ends (within last 10 seconds) to catch immediate refreshes
+        if (gameEndTime > 0 && (currentTime - gameEndTime) < 10000) {
+            console.warn('Player refreshed immediately after game end. Applying minor penalty.');
+            const penaltyResult = this.eloSystem.applyPenalty(25);
+            this.showPenaltyMessage(penaltyResult);
+            this.loadUserData();
+        }
+    }
+    
+    showPenaltyMessage(penaltyResult) {
+        // Create penalty notification
+        const penaltyDiv = document.createElement('div');
+        penaltyDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--accent-red);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            z-index: 10000;
+            text-align: center;
+            font-weight: bold;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        `;
+        
+        penaltyDiv.innerHTML = `
+            <h3>⚠️ Game Violation Detected</h3>
+            <p>You refreshed during an active game.</p>
+            <p><strong>ELO Penalty: -${penaltyResult.penaltyAmount}</strong></p>
+            <p>Old Rating: ${penaltyResult.oldRating}</p>
+            <p>New Rating: ${penaltyResult.newRating}</p>
+            <p style="font-size: 0.9rem; margin-top: 1rem;">
+                Please complete games properly to avoid penalties.
+            </p>
+            <button onclick="this.parentNode.remove()" style="
+                margin-top: 1rem;
+                padding: 0.5rem 1rem;
+                background: white;
+                color: var(--accent-red);
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: bold;
+            ">Acknowledge</button>
+        `;
+        
+        document.body.appendChild(penaltyDiv);
+        
+        // Auto-remove after 8 seconds
+        setTimeout(() => {
+            if (penaltyDiv.parentNode) {
+                penaltyDiv.remove();
+            }
+        }, 8000);
     }
 }
 

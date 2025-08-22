@@ -193,6 +193,69 @@ class EloSystem {
         Utils.saveGameData('placementHistory', []);
     }
     
+    // Apply penalty for refreshing during game or other violations
+    applyPenalty(penaltyAmount) {
+        console.log(`Applying ELO penalty: ${penaltyAmount} points`);
+        
+        const oldRating = this.playerRating;
+        this.playerRating = Math.max(500, this.playerRating - penaltyAmount); // Minimum 500 ELO
+        
+        // Save the new rating
+        this.savePlayerRating();
+        
+        // Record the penalty
+        const penalties = Utils.loadGameData('eloPenalties', []);
+        penalties.push({
+            amount: penaltyAmount,
+            reason: 'Game refresh violation',
+            timestamp: Date.now(),
+            oldRating: oldRating,
+            newRating: this.playerRating
+        });
+        
+        // Keep only last 20 penalties
+        if (penalties.length > 20) {
+            penalties.splice(0, penalties.length - 20);
+        }
+        
+        Utils.saveGameData('eloPenalties', penalties);
+        
+        return {
+            penaltyAmount: penaltyAmount,
+            oldRating: oldRating,
+            newRating: this.playerRating,
+            reason: 'Game refresh violation'
+        };
+    }
+    
+    // Handle legitimate game exit (with grace period)
+    handleLegitimateExit() {
+        // Mark that player is exiting legitimately
+        Utils.saveGameData('legitimateExitTime', Date.now());
+        Utils.saveGameData('legitimateExit', true);
+        
+        // Clear any penalty flags
+        Utils.saveGameData('gameLeftDuringPlay', false);
+        Utils.saveGameData('gameLeftTime', 0);
+    }
+    
+    // Check if exit was legitimate (within grace period)
+    isLegitimateExit() {
+        const legitimateExit = Utils.loadGameData('legitimateExit', false);
+        const legitimateExitTime = Utils.loadGameData('legitimateExitTime', 0);
+        const currentTime = Date.now();
+        
+        // If they marked a legitimate exit and returned within 2 minutes, it's probably okay
+        if (legitimateExit && (currentTime - legitimateExitTime) < 120000) {
+            // Clear the flag
+            Utils.saveGameData('legitimateExit', false);
+            Utils.saveGameData('legitimateExitTime', 0);
+            return true;
+        }
+        
+        return false;
+    }
+    
     // Get placement-based ELO rewards (for display purposes)
     static getPlacementRewards(totalPlayers) {
         const rewards = [];
