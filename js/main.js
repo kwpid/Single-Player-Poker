@@ -38,6 +38,9 @@ class GameApp {
         // Initialize settings from localStorage
         this.initializeSettings();
         
+        // Regenerate leaderboards with new AI names if needed
+        this.regenerateLeaderboardsIfNeeded();
+        
         // Show main menu
         this.showScreen('mainMenu');
     }
@@ -877,6 +880,7 @@ class GameApp {
         debugPanel.innerHTML = `
             <div>Debug Mode Active</div>
             <button onclick="gameApp.eloSystem.playerRating += 100; gameApp.loadUserData();">+100 ELO</button>
+            <button onclick="gameApp.forceRegenerateLeaderboards();">Regen Leaderboards</button>
             <button onclick="gameApp.resetAllData();">Reset Data</button>
             <button onclick="this.parentNode.remove();">Close</button>
         `;
@@ -892,6 +896,34 @@ class GameApp {
                     console.warn('High memory usage detected:', memory.usedJSHeapSize / 1024 / 1024, 'MB');
                 }
             }, 30000); // Check every 30 seconds
+        }
+    }
+
+    // Regenerate leaderboards with new AI names if needed
+    regenerateLeaderboardsIfNeeded() {
+        const lastRegeneration = Utils.loadGameData('leaderboardsRegeneratedAt', 0);
+        const currentTime = Date.now();
+        const timeSinceLastRegeneration = currentTime - lastRegeneration;
+
+        // Regenerate leaderboards every 24 hours
+        if (timeSinceLastRegeneration > 24 * 60 * 60 * 1000) {
+            console.log('Regenerating leaderboards with new AI names...');
+            this.leaderboardSystem.regenerateLeaderboards();
+            Utils.saveGameData('leaderboardsRegeneratedAt', currentTime);
+            console.log('Leaderboards regenerated.');
+        }
+    }
+
+    // Manual leaderboard regeneration (for testing/debugging)
+    forceRegenerateLeaderboards() {
+        console.log('Force regenerating leaderboards...');
+        this.leaderboardSystem.regenerateLeaderboards();
+        Utils.saveGameData('leaderboardsRegeneratedAt', Date.now());
+        console.log('Leaderboards force regenerated.');
+        
+        // Refresh any open modals
+        if (this.currentScreen === 'leaderboard') {
+            this.populateLeaderboardModal();
         }
     }
 }

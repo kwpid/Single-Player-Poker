@@ -23,37 +23,32 @@ class LeaderboardSystem {
 
     generateMainAI() {
         const mainAI = [];
-        const firstNames = [
-            'Alex', 'Jordan', 'Casey', 'Morgan', 'Taylor', 'Riley', 'Avery', 'Quinn',
-            'Blake', 'Cameron', 'Drew', 'Sage', 'Rowan', 'Finley', 'Peyton', 'Hayden',
-            'River', 'Dakota', 'Phoenix', 'Skyler', 'Raven', 'Storm', 'Winter', 'Scout',
-            'Dallas', 'Justice', 'Emery', 'Remy', 'Kai', 'Briar', 'London', 'Parker',
-            'Nova', 'Sage', 'Zion', 'Ari', 'Eden', 'Marlowe', 'Onyx', 'Sterling'
-        ];
+        // Use casual names from AINameGenerator for stats leaderboards
+        const casualNames = AINameGenerator.casualNames;
         
-        const lastNames = [
-            'Chen', 'Rodriguez', 'Johnson', 'Williams', 'Brown', 'Davis', 'Miller', 'Wilson',
-            'Moore', 'Taylor', 'Anderson', 'Thomas', 'Jackson', 'White', 'Harris', 'Martin',
-            'Thompson', 'Garcia', 'Martinez', 'Robinson', 'Clark', 'Lewis', 'Lee', 'Walker',
-            'Hall', 'Allen', 'Young', 'King', 'Wright', 'Lopez', 'Hill', 'Scott', 'Green',
-            'Adams', 'Baker', 'Gonzalez', 'Nelson', 'Carter', 'Mitchell', 'Perez', 'Roberts'
-        ];
-
         for (let i = 0; i < 150; i++) {
-            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-            const name = `${firstName} ${lastName}`;
+            let name = casualNames[i % casualNames.length];
+            
+            // Add number suffix for uniqueness if we have more AI than names
+            if (i >= casualNames.length) {
+                const suffix = Math.floor(i / casualNames.length) + 1;
+                name = `${name}${suffix}`;
+            }
+            
+            // Ensure all AI have 3k+ wins and lots of XP
+            const wins = 3000 + Math.floor(Math.random() * 7000); // 3000-10000 wins
+            const xp = 50000 + Math.floor(Math.random() * 200000); // 50k-250k XP
             
             const ai = {
                 name: name,
-                wins: Math.floor(Math.random() * 500) + 10,
+                wins: wins,
                 totalGames: 0,
-                xp: Math.floor(Math.random() * 50000) + 1000,
+                xp: xp,
                 level: 1,
                 winRate: 0,
                 lastActive: Date.now() - Math.random() * 86400000 * 30, // Last 30 days
-                weeklyWins: Math.floor(Math.random() * 20),
-                monthlyWins: Math.floor(Math.random() * 80)
+                weeklyWins: Math.floor(Math.random() * 50) + 20, // 20-70 weekly wins
+                monthlyWins: Math.floor(Math.random() * 200) + 100 // 100-300 monthly wins
             };
             
             // Calculate total games and win rate
@@ -74,32 +69,32 @@ class LeaderboardSystem {
 
     generateHighRankedAI() {
         const highRankedAI = [];
-        const competitiveNames = [
-            'ProPlayer_1', 'PokerLegend', 'ChipMaster', 'RoyalFlush', 'AllInAce',
-            'BluffKing', 'CardShark', 'PokerPro', 'TiltLess', 'NutHunter',
-            'ValueTown', 'RangeBot', 'GTO_Master', 'SolverKing', 'MetaGame',
-            'VarianceGod', 'ICM_Wizard', 'Nash_EQ', 'OptimalPlay', 'DeepStack',
-            'ShortStack', 'LAGMaster', 'TAGPro', 'NittyGritty', 'ManiacMode'
-        ];
-
+        // Use competitive names from AINameGenerator for competitive leaderboards
+        const competitiveNames = AINameGenerator.competitiveNames;
+        
+        // Only create Grand Champion level AI (2200+ ELO)
         for (let i = 0; i < 25; i++) {
-            const baseName = competitiveNames[i % competitiveNames.length];
-            const suffix = i > competitiveNames.length - 1 ? `_${Math.floor(i / competitiveNames.length) + 1}` : '';
-            const name = baseName + suffix;
+            let name = competitiveNames[i % competitiveNames.length];
             
-            // High-ranked AI starts with higher ELO
-            const elo = 1200 + Math.floor(Math.random() * 1000); // 1200-2200 ELO
+            // Add number suffix for uniqueness if we have more AI than names
+            if (i >= competitiveNames.length) {
+                const suffix = Math.floor(i / competitiveNames.length) + 1;
+                name = `${name}${suffix}`;
+            }
+            
+            // Ensure all competitive AI are Grand Champions with very high ELO
+            const elo = 2200 + Math.floor(Math.random() * 3000); // 2200-5200 ELO (Grand Champion only)
             
             const ai = {
                 name: name,
                 rankedElo: elo,
-                rank: this.getRankFromElo(elo),
-                wins: Math.floor(Math.random() * 200) + 50,
-                losses: Math.floor(Math.random() * 100) + 20,
+                rank: this.getRankFromElo(elo), // This will always be 'Grand Champion'
+                wins: Math.floor(Math.random() * 500) + 200, // 200-700 wins
+                losses: Math.floor(Math.random() * 200) + 50, // 50-250 losses
                 isActive: true,
                 lastGameTime: Date.now() - Math.random() * 3600000 * 24, // Last 24 hours
-                seasonWins: Math.floor(Math.random() * 50) + 10,
-                seasonLosses: Math.floor(Math.random() * 30) + 5
+                seasonWins: Math.floor(Math.random() * 100) + 50, // 50-150 season wins
+                seasonLosses: Math.floor(Math.random() * 50) + 20 // 20-70 season losses
             };
             
             ai.totalGames = ai.wins + ai.losses;
@@ -194,7 +189,7 @@ class LeaderboardSystem {
             
             // Simulate a game result
             const won = Math.random() < 0.5;
-            const xpGained = Math.floor(Math.random() * 50) + 10;
+            const xpGained = Math.floor(Math.random() * 100) + 50; // Higher XP gains
             
             if (won) {
                 ai.wins++;
@@ -207,11 +202,15 @@ class LeaderboardSystem {
             ai.level = this.calculateLevelFromXP(ai.xp);
             ai.winRate = ((ai.wins / ai.totalGames) * 100).toFixed(1);
             ai.lastActive = Date.now();
+            
+            // Ensure minimum stats are maintained
+            if (ai.wins < 3000) ai.wins = 3000;
+            if (ai.xp < 50000) ai.xp = 50000;
         }
         
         Utils.saveGameData('mainAI', mainAI);
         
-        // Progress high-ranked AI
+        // Progress high-ranked AI - ensure they stay at Grand Champion level
         const highRankedAI = Utils.loadGameData('highRankedAI', []);
         
         const activeCompetitiveAI = Math.floor(Math.random() * 3) + 1;
@@ -233,7 +232,7 @@ class LeaderboardSystem {
                 case 5: eloChange = -15; break;
             }
             
-            ai.rankedElo = Math.max(0, ai.rankedElo + eloChange);
+            ai.rankedElo = Math.max(2200, ai.rankedElo + eloChange); // Never drop below Grand Champion
             ai.rank = this.getRankFromElo(ai.rankedElo);
             
             if (won) {
@@ -313,8 +312,11 @@ class LeaderboardSystem {
         const rankedSystem = new RankedSystem();
         const playerRankedStats = rankedSystem.getRankedStats();
         
-        // Add player if they are ranked
-        if (playerRankedStats.isRanked) {
+        // Filter to only show Grand Champions
+        const grandChampions = highRankedAI.filter(ai => ai.rank === 'Grand Champion');
+        
+        // Add player if they are ranked and are Grand Champion
+        if (playerRankedStats.isRanked && playerRankedStats.rank === 'Grand Champion') {
             const playerEntry = {
                 name: Utils.loadGameData('username', 'Player'),
                 rankedElo: playerRankedStats.elo,
@@ -326,12 +328,13 @@ class LeaderboardSystem {
             };
             playerEntry.winRate = playerEntry.totalGames > 0 ? ((playerEntry.wins / playerEntry.totalGames) * 100).toFixed(1) : 0;
             
-            const combinedList = [...highRankedAI, playerEntry];
+            const combinedList = [...grandChampions, playerEntry];
             combinedList.sort((a, b) => b.rankedElo - a.rankedElo);
             return combinedList.slice(0, 25);
         }
         
-        return highRankedAI.slice(0, 25);
+        // Only return Grand Champions
+        return grandChampions.slice(0, 25);
     }
 
     getPlayerWeeklyWins() {
@@ -366,6 +369,28 @@ class LeaderboardSystem {
             this.resetMonthlyStats();
             Utils.saveGameData('lastMonthlyReset', currentTime);
         }
+    }
+
+    // Regenerate leaderboards with new AI names (useful for updates)
+    regenerateLeaderboards() {
+        // Clear existing data
+        Utils.saveGameData('mainAI', null);
+        Utils.saveGameData('highRankedAI', null);
+        
+        // Regenerate with new names
+        this.generateMainAI();
+        this.generateHighRankedAI();
+        
+        console.log('Leaderboards regenerated with new AI names');
+    }
+
+    // Force refresh leaderboards (useful for manual updates)
+    forceRefreshLeaderboards() {
+        this.regenerateLeaderboards();
+        return {
+            mainAI: Utils.loadGameData('mainAI', []),
+            highRankedAI: Utils.loadGameData('highRankedAI', [])
+        };
     }
 
     resetWeeklyStats() {
