@@ -15,6 +15,8 @@ class PokerGame {
         this.bettingRound = 0;
         this.gameActive = false;
         this.handHistory = [];
+        this.playersActedThisRound = new Set(); // Track who has acted this betting round
+        this.lastAggressor = -1; // Index of last player to raise
         
         this.initializeElements();
     }
@@ -157,6 +159,8 @@ class PokerGame {
         this.currentBet = 0;
         this.gamePhase = 'preflop';
         this.bettingRound = 0;
+        this.playersActedThisRound = new Set();
+        this.lastAggressor = -1;
         
         // Reset players
         for (let player of this.players) {
@@ -214,6 +218,11 @@ class PokerGame {
         
         // Set first to act (UTG or after big blind)
         this.currentPlayerIndex = (bigBlindIndex + 1) % this.players.length;
+        
+        // Mark blind posters as having acted
+        this.playersActedThisRound.add(smallBlindIndex);
+        this.playersActedThisRound.add(bigBlindIndex);
+        this.lastAggressor = bigBlindIndex; // Big blind is initial aggressor
         
         this.showMessage(`Blinds posted: $${sbAmount}/$${bbAmount}`, 1500);
         this.updateUI();
@@ -312,14 +321,44 @@ class PokerGame {
     }
     
     isBettingRoundComplete() {
-        const activePlayers = this.players.filter(p => !p.folded && p.chips >= 0);
+        const activePlayers = this.players.filter(p => !p.folded && p.chips > 0);
         
         if (activePlayers.length <= 1) return true;
         
-        // Check if all active players have acted and matched the current bet
+        // Check if all active players have acted at least once this round
+        for (let player of activePlayers) {
+            const playerIndex = this.players.indexOf(player);
+            if (!this.playersActedThisRound.has(playerIndex)) {
+                return false;
+            }
+        }
+        
+        // Check if all active players have matched the current bet or are all-in
         for (let player of activePlayers) {
             if (player.chips > 0 && player.currentBet < this.currentBet) {
                 return false;
+            }
+        }
+        
+        // If there was a raise, make sure action gets back to the aggressor
+        if (this.lastAggressor !== -1) {
+            const aggressor = this.players[this.lastAggressor];
+            if (!aggressor.folded && aggressor.chips > 0) {
+                // If current player hasn't reached the aggressor yet, continue
+                let playersSinceAggressor = 0;
+                let checkIndex = (this.lastAggressor + 1) % this.players.length;
+                while (checkIndex !== this.currentPlayerIndex) {
+                    if (!this.players[checkIndex].folded && this.players[checkIndex].chips > 0) {
+                        playersSinceAggressor++;
+                    }
+                    checkIndex = (checkIndex + 1) % this.players.length;
+                }
+                
+                // If we haven't gone around to all players since the raise, continue
+                const activeCount = activePlayers.length;
+                if (playersSinceAggressor < activeCount - 1) {
+                    return false;
+                }
             }
         }
         
@@ -439,6 +478,14 @@ class PokerGame {
                 break;
         }
         
+        // Track that this player has acted this round
+        this.playersActedThisRound.add(this.currentPlayerIndex);
+        
+        // Track aggressor for raises
+        if (action === 'raise') {
+            this.lastAggressor = this.currentPlayerIndex;
+        }
+        
         // Show action
         this.showPlayerAction(currentPlayer, actionText);
         Utils.playSound(action === 'fold' ? 'click' : 'chip');
@@ -485,6 +532,8 @@ class PokerGame {
             player.currentBet = 0;
         }
         this.currentBet = 0;
+        this.playersActedThisRound = new Set();
+        this.lastAggressor = -1;
         
         const activePlayers = this.players.filter(p => !p.folded);
         if (activePlayers.length <= 1) {
@@ -517,7 +566,7 @@ class PokerGame {
         }
         
         this.displayCommunityCards();
-        this.showMessage('Flop dealt', 2000);
+        this.showMessage('Flop: Three community cards dealt', 2000);
         
         // First to act is first active player after dealer
         this.currentPlayerIndex = this.getFirstToAct();
@@ -531,7 +580,7 @@ class PokerGame {
         this.communityCards.push(this.deck.deal());
         
         this.displayCommunityCards();
-        this.showMessage('Turn dealt', 1500);
+        this.showMessage('Turn: Fourth community card dealt', 1500);
         
         this.currentPlayerIndex = this.getFirstToAct();
         setTimeout(() => this.startBettingRound(), 1500);
@@ -543,7 +592,7 @@ class PokerGame {
         this.communityCards.push(this.deck.deal());
         
         this.displayCommunityCards();
-        this.showMessage('River dealt', 1500);
+        this.showMessage('River: Fifth community card dealt', 1500);
         
         this.currentPlayerIndex = this.getFirstToAct();
         setTimeout(() => this.startBettingRound(), 1500);
