@@ -1,7 +1,7 @@
 // Main Poker Game Logic
 
 class PokerGame {
-    constructor() {
+    constructor(gameSettings = {}) {
         this.players = [];
         this.deck = null;
         this.communityCards = [];
@@ -17,6 +17,10 @@ class PokerGame {
         this.handHistory = [];
         this.playersActedThisRound = new Set(); // Track who has acted this betting round
         this.lastAggressor = -1; // Index of last player to raise
+        
+        // Game settings from main app
+        this.startingChips = gameSettings.startingChips || 5000;
+        this.gameMode = gameSettings.gameMode || 'casual';
         
         this.initializeElements();
     }
@@ -71,7 +75,7 @@ class PokerGame {
         // Create human player
         const humanPlayer = {
             name: Utils.loadGameData('username', 'Player'),
-            chips: 5000,
+            chips: this.startingChips,
             hand: [],
             isHuman: true,
             folded: false,
@@ -697,10 +701,31 @@ class PokerGame {
         const humanPlayer = standings.find(p => p.isHuman);
         const humanPlacement = standings.indexOf(humanPlayer) + 1;
         
-        // Update ELO
-        const eloSystem = new EloSystem();
-        const eloResult = eloSystem.applyEloChange(humanPlacement, this.players.length - 1, true);
-        eloSystem.updateStats(humanPlacement);
+        // Create game result for main app
+        const gameResult = {
+            gameMode: this.gameMode,
+            placement: humanPlacement,
+            totalPlayers: this.players.length,
+            playerElo: null, // Will be updated by main app
+            standings: standings
+        };
+        
+        // Update ELO based on game mode
+        let eloResult;
+        if (this.gameMode === 'ranked') {
+            // For ranked, let the main app handle it through rankedSystem
+            eloResult = { change: 0, newRating: 0 }; // Placeholder
+        } else {
+            // For casual, use the old ELO system
+            const eloSystem = new EloSystem();
+            eloResult = eloSystem.applyEloChange(humanPlacement, this.players.length - 1, true);
+            gameResult.playerElo = eloResult.newRating;
+        }
+        
+        // Call main app to handle stats, XP, and ranked progression
+        if (window.gameApp && typeof window.gameApp.handleGameComplete === 'function') {
+            window.gameApp.handleGameComplete(gameResult);
+        }
         
         this.showResults(standings, eloResult);
     }

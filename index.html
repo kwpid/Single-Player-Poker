@@ -40,10 +40,9 @@
                     <i class="fas fa-play"></i>
                     <span>Casual Queue</span>
                 </button>
-                <button class="game-button disabled" id="rankedBtn">
+                <button class="game-button" id="rankedBtn">
                     <i class="fas fa-crown"></i>
                     <span>Ranked</span>
-                    <small>Coming Soon</small>
                 </button>
                 <button class="game-button secondary" id="tutorialBtn">
                     <i class="fas fa-graduation-cap"></i>
@@ -57,10 +56,13 @@
             </div>
 
             <div class="secondary-buttons">
-                <button class="menu-button disabled" id="leaderboardBtn">
+                <button class="menu-button" id="leaderboardBtn">
                     <i class="fas fa-medal"></i>
                     <span>Leaderboards</span>
-                    <small>Coming Soon</small>
+                </button>
+                <button class="menu-button" id="statsBtn">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Stats</span>
                 </button>
                 <button class="menu-button" id="settingsBtn">
                     <i class="fas fa-cog"></i>
@@ -297,8 +299,168 @@
         </div>
     </div>
 
+    <!-- Stats Modal -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content stats-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-bar"></i> Player Statistics</h3>
+                <button class="close-btn" id="closeStatsBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid">
+                    <div class="stat-section">
+                        <h4>Overall Performance</h4>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Wins:</span>
+                            <span class="stat-value" id="totalWins">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Losses:</span>
+                            <span class="stat-value" id="totalLosses">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Win Rate:</span>
+                            <span class="stat-value" id="totalWinRate">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Games Played:</span>
+                            <span class="stat-value" id="totalGames">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-section">
+                        <h4>Casual Mode</h4>
+                        <div class="stat-item">
+                            <span class="stat-label">Wins:</span>
+                            <span class="stat-value" id="casualWins">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Win Rate:</span>
+                            <span class="stat-value" id="casualWinRate">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Peak ELO:</span>
+                            <span class="stat-value" id="peakCasualElo">1000</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-section">
+                        <h4>Ranked Mode</h4>
+                        <div class="stat-item">
+                            <span class="stat-label">Wins:</span>
+                            <span class="stat-value" id="rankedWins">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Win Rate:</span>
+                            <span class="stat-value" id="rankedWinRate">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Peak ELO:</span>
+                            <span class="stat-value" id="peakRankedElo">600</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Peak Rank:</span>
+                            <span class="stat-value" id="peakRank">Bronze I</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-section">
+                        <h4>Progression</h4>
+                        <div class="stat-item">
+                            <span class="stat-label">Level:</span>
+                            <span class="stat-value" id="playerLevel">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total XP:</span>
+                            <span class="stat-value" id="totalXP">0</span>
+                        </div>
+                        <div class="xp-progress">
+                            <div class="xp-bar">
+                                <div class="xp-fill" id="xpProgress" style="width: 0%"></div>
+                            </div>
+                            <span class="xp-text" id="xpText">0 / 100 XP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ranked Queue Selection Modal -->
+    <div id="rankedModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-crown"></i> Ranked Mode</h3>
+                <button class="close-btn" id="closeRankedBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="ranked-info" id="rankedInfo">
+                    <!-- Ranked info will be populated here -->
+                </div>
+                <div class="ranked-actions">
+                    <button class="game-button primary" id="startRankedBtn">
+                        <i class="fas fa-play"></i>
+                        Start Ranked Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboardModal" class="modal">
+        <div class="modal-content leaderboard-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-medal"></i> Leaderboards</h3>
+                <button class="close-btn" id="closeLeaderboardBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="leaderboard-tabs">
+                    <button class="tab-btn active" data-tab="stats">Stats</button>
+                    <button class="tab-btn" data-tab="competitive">Competitive</button>
+                </div>
+                
+                <div class="tab-content" id="statsTab">
+                    <div class="stats-leaderboard-controls">
+                        <div class="category-selector">
+                            <button class="category-btn active" data-category="wins">Wins</button>
+                            <button class="category-btn" data-category="xp">XP</button>
+                        </div>
+                        <div class="timeframe-selector" id="timeframeSelector">
+                            <button class="timeframe-btn active" data-timeframe="allTime">All-Time</button>
+                            <button class="timeframe-btn" data-timeframe="monthly">Monthly</button>
+                            <button class="timeframe-btn" data-timeframe="weekly">Weekly</button>
+                        </div>
+                    </div>
+                    <div class="leaderboard-list" id="statsLeaderboard">
+                        <!-- Stats leaderboard will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="tab-content hidden" id="competitiveTab">
+                    <div class="competitive-header">
+                        <h4>Top 25 Ranked Players</h4>
+                        <p id="seasonInfo">Current Season</p>
+                    </div>
+                    <div class="leaderboard-list" id="competitiveLeaderboard">
+                        <!-- Competitive leaderboard will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/utils.js"></script>
     <script src="js/elo.js"></script>
+    <script src="js/stats.js"></script>
+    <script src="js/ranked.js"></script>
+    <script src="js/leaderboards.js"></script>
     <script src="js/ai.js"></script>
     <script src="js/poker.js"></script>
     <script src="js/main.js"></script>

@@ -5,8 +5,12 @@ class GameApp {
         this.currentScreen = 'mainMenu';
         this.pokerGame = null;
         this.eloSystem = new EloSystem();
+        this.statsSystem = new StatsSystem();
+        this.rankedSystem = new RankedSystem();
+        this.leaderboardSystem = new LeaderboardSystem();
         this.queueTimer = null;
         this.queueStartTime = null;
+        this.currentGameMode = 'casual'; // 'casual' or 'ranked'
         
         this.initializeApp();
         this.setupEventListeners();
@@ -25,7 +29,10 @@ class GameApp {
         // Get modal elements
         this.modals = {
             settings: document.getElementById('settingsModal'),
-            help: document.getElementById('helpModal')
+            help: document.getElementById('helpModal'),
+            stats: document.getElementById('statsModal'),
+            ranked: document.getElementById('rankedModal'),
+            leaderboard: document.getElementById('leaderboardModal')
         };
         
         // Initialize settings from localStorage
@@ -63,6 +70,7 @@ class GameApp {
         // Main menu buttons
         document.getElementById('casualQueueBtn').addEventListener('click', () => {
             Utils.playSound('click');
+            this.currentGameMode = 'casual';
             this.startQueue();
         });
         
@@ -118,6 +126,62 @@ class GameApp {
         // Help modal
         document.getElementById('closeHelpBtn').addEventListener('click', () => {
             this.hideModal('help');
+        });
+
+        // New UI buttons
+        document.getElementById('rankedBtn').addEventListener('click', () => {
+            Utils.playSound('click');
+            this.showModal('ranked');
+        });
+
+        document.getElementById('statsBtn').addEventListener('click', () => {
+            Utils.playSound('click');
+            this.showModal('stats');
+        });
+
+        document.getElementById('leaderboardBtn').addEventListener('click', () => {
+            Utils.playSound('click');
+            this.showModal('leaderboard');
+        });
+
+        // Stats modal
+        document.getElementById('closeStatsBtn').addEventListener('click', () => {
+            this.hideModal('stats');
+        });
+
+        // Ranked modal
+        document.getElementById('closeRankedBtn').addEventListener('click', () => {
+            this.hideModal('ranked');
+        });
+
+        document.getElementById('startRankedBtn').addEventListener('click', () => {
+            Utils.playSound('click');
+            this.startRankedQueue();
+        });
+
+        // Leaderboard modal
+        document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {
+            this.hideModal('leaderboard');
+        });
+
+        // Leaderboard tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchLeaderboardTab(e.target.dataset.tab);
+            });
+        });
+
+        // Stats leaderboard controls
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchStatsCategory(e.target.dataset.category);
+            });
+        });
+
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchStatsTimeframe(e.target.dataset.timeframe);
+            });
         });
         
         // Modal backdrop clicks
@@ -197,6 +261,19 @@ class GameApp {
     showModal(modalName) {
         if (this.modals[modalName]) {
             this.modals[modalName].classList.add('active');
+            
+            // Populate modal data when opened
+            switch (modalName) {
+                case 'stats':
+                    this.populateStatsModal();
+                    break;
+                case 'ranked':
+                    this.populateRankedModal();
+                    break;
+                case 'leaderboard':
+                    this.populateLeaderboardModal();
+                    break;
+            }
         }
     }
     
@@ -318,8 +395,14 @@ class GameApp {
     startGame() {
         this.showScreen('gameScreen');
         
-        // Initialize poker game
-        this.pokerGame = new PokerGame();
+        // Game settings based on mode
+        const gameSettings = {
+            gameMode: this.currentGameMode,
+            startingChips: this.currentGameMode === 'ranked' ? 500 : 5000
+        };
+        
+        // Initialize poker game with settings
+        this.pokerGame = new PokerGame(gameSettings);
         
         // Number of AI players (3-5 total players including human)
         const numPlayers = 3 + Math.floor(Math.random() * 3); // 3-5 players total
@@ -459,6 +542,291 @@ class GameApp {
         };
         
         showStep();
+    }
+
+    // New System Integration Methods
+    
+    populateStatsModal() {
+        const stats = this.statsSystem.getStats();
+        
+        // Overall stats
+        document.getElementById('totalWins').textContent = stats.overall.wins;
+        document.getElementById('totalLosses').textContent = stats.overall.losses;
+        document.getElementById('totalWinRate').textContent = stats.overall.winRate + '%';
+        document.getElementById('totalGames').textContent = stats.overall.gamesPlayed;
+        
+        // Casual stats
+        document.getElementById('casualWins').textContent = stats.casual.wins;
+        document.getElementById('casualWinRate').textContent = stats.casual.winRate + '%';
+        document.getElementById('peakCasualElo').textContent = stats.peaks.casualElo;
+        
+        // Ranked stats
+        document.getElementById('rankedWins').textContent = stats.ranked.wins;
+        document.getElementById('rankedWinRate').textContent = stats.ranked.winRate + '%';
+        document.getElementById('peakRankedElo').textContent = stats.peaks.rankedElo;
+        document.getElementById('peakRank').textContent = stats.peaks.rank;
+        
+        // XP and progression
+        document.getElementById('playerLevel').textContent = stats.progression.currentLevel;
+        document.getElementById('totalXP').textContent = stats.progression.totalXP.toLocaleString();
+        document.getElementById('xpProgress').style.width = stats.progression.progress + '%';
+        document.getElementById('xpText').textContent = 
+            `${stats.progression.currentXP} / ${stats.progression.neededXP} XP`;
+    }
+    
+    populateRankedModal() {
+        const rankedStats = this.rankedSystem.getRankedStats();
+        const seasonInfo = this.rankedSystem.getSeasonInfo();
+        
+        let infoHTML = '';
+        
+        if (rankedStats.isRanked) {
+            // Player is already ranked
+            infoHTML = `
+                <div class="ranked-status">
+                    <h4>Current Season: ${seasonInfo.name}</h4>
+                    <div class="rank-display">
+                        <div class="rank-info">
+                            <span class="rank-name" style="color: ${rankedStats.rankInfo.color}">${rankedStats.rank}</span>
+                            <span class="rank-elo">${rankedStats.elo} ELO</span>
+                        </div>
+                    </div>
+                    <div class="ranked-note">
+                        <p>Ranked games use 500 chips for faster gameplay.</p>
+                        <p>AI opponents will be matched to your skill level.</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Player needs placement matches
+            const placement = rankedStats.placementProgress;
+            infoHTML = `
+                <div class="placement-status">
+                    <h4>Placement Matches</h4>
+                    <p>Complete 5 placement matches to get your rank for ${seasonInfo.name} season.</p>
+                    <div class="placement-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${(placement.matches / 5) * 100}%"></div>
+                        </div>
+                        <span class="progress-text">${placement.matches} / 5 matches completed</span>
+                    </div>
+                    <div class="placement-record">
+                        <span>Wins: ${placement.wins}</span>
+                    </div>
+                    <div class="ranked-note">
+                        <p>Ranked games use 500 chips for faster gameplay.</p>
+                        <p>Your placement will determine your starting rank.</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        document.getElementById('rankedInfo').innerHTML = infoHTML;
+    }
+    
+    populateLeaderboardModal() {
+        // Initialize with stats tab
+        this.switchLeaderboardTab('stats');
+    }
+    
+    switchLeaderboardTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Show/hide tab content
+        document.getElementById('statsTab').classList.toggle('hidden', tabName !== 'stats');
+        document.getElementById('competitiveTab').classList.toggle('hidden', tabName !== 'competitive');
+        
+        if (tabName === 'stats') {
+            this.updateStatsLeaderboard();
+        } else if (tabName === 'competitive') {
+            this.updateCompetitiveLeaderboard();
+        }
+    }
+    
+    switchStatsCategory(category) {
+        // Update category buttons
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.category === category) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Show/hide timeframe selector for XP category
+        const timeframeSelector = document.getElementById('timeframeSelector');
+        timeframeSelector.style.display = category === 'xp' ? 'none' : 'flex';
+        
+        this.updateStatsLeaderboard();
+    }
+    
+    switchStatsTimeframe(timeframe) {
+        // Update timeframe buttons
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.timeframe === timeframe) {
+                btn.classList.add('active');
+            }
+        });
+        
+        this.updateStatsLeaderboard();
+    }
+    
+    updateStatsLeaderboard() {
+        const activeCategory = document.querySelector('.category-btn.active').dataset.category;
+        const activeTimeframe = document.querySelector('.timeframe-btn.active')?.dataset.timeframe || 'allTime';
+        
+        const leaderboardData = this.leaderboardSystem.getStatsLeaderboard(activeCategory, activeTimeframe);
+        
+        let html = '';
+        leaderboardData.forEach((entry, index) => {
+            const rank = index + 1;
+            const isPlayer = entry.isPlayer;
+            let value, subtitle;
+            
+            if (activeCategory === 'wins') {
+                if (activeTimeframe === 'weekly') {
+                    value = entry.weeklyWins || 0;
+                    subtitle = `${entry.winRate}% WR`;
+                } else if (activeTimeframe === 'monthly') {
+                    value = entry.monthlyWins || 0;
+                    subtitle = `${entry.winRate}% WR`;
+                } else {
+                    value = entry.wins;
+                    subtitle = `${entry.winRate}% WR`;
+                }
+            } else {
+                value = entry.xp.toLocaleString();
+                subtitle = `Level ${entry.level}`;
+            }
+            
+            html += `
+                <div class="leaderboard-entry ${isPlayer ? 'player-entry' : ''}">
+                    <span class="rank">${rank}</span>
+                    <span class="name">${entry.name}</span>
+                    <div class="stats">
+                        <span class="value">${value}</span>
+                        <span class="subtitle">${subtitle}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        document.getElementById('statsLeaderboard').innerHTML = html;
+    }
+    
+    updateCompetitiveLeaderboard() {
+        const seasonInfo = this.rankedSystem.getSeasonInfo();
+        document.getElementById('seasonInfo').textContent = `Season: ${seasonInfo.name}`;
+        
+        const leaderboardData = this.leaderboardSystem.getCompetitiveLeaderboard();
+        
+        let html = '';
+        leaderboardData.forEach((entry, index) => {
+            const rank = index + 1;
+            const isPlayer = entry.isPlayer;
+            
+            html += `
+                <div class="leaderboard-entry ${isPlayer ? 'player-entry' : ''}">
+                    <span class="rank">${rank}</span>
+                    <span class="name">${entry.name}</span>
+                    <div class="stats">
+                        <span class="rank-name" style="color: ${this.rankedSystem.getRankFromElo(entry.rankedElo).color}">
+                            ${entry.rank}
+                        </span>
+                        <span class="elo">${entry.rankedElo} ELO</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        document.getElementById('competitiveLeaderboard').innerHTML = html;
+    }
+    
+    startRankedQueue() {
+        this.currentGameMode = 'ranked';
+        this.hideModal('ranked');
+        this.startQueue();
+    }
+    
+    // Handle game completion with stats tracking
+    handleGameComplete(gameResult) {
+        const isRanked = gameResult.gameMode === 'ranked';
+        const placement = gameResult.placement;
+        const totalPlayers = gameResult.totalPlayers;
+        
+        // Record stats and award XP
+        const xpResult = this.statsSystem.recordGameResult(placement, totalPlayers, isRanked, gameResult.playerElo);
+        
+        // Handle ranked game result
+        let rankedResult = null;
+        if (isRanked) {
+            rankedResult = this.rankedSystem.processRankedGameResult(placement, totalPlayers);
+            
+            // Update peak rank if improved
+            if (rankedResult.newRank !== 'Unranked') {
+                this.statsSystem.updatePeakRank(rankedResult.newRank);
+            }
+        }
+        
+        // Update UI with results
+        this.displayGameResults(gameResult, xpResult, rankedResult);
+        
+        // Refresh user data
+        this.loadUserData();
+        
+        // Reset game mode to casual for next game
+        this.currentGameMode = 'casual';
+    }
+    
+    displayGameResults(gameResult, xpResult, rankedResult) {
+        // This method would be called by the PokerGame class to show results
+        // Including XP gained, level ups, ELO changes, rank changes, etc.
+        const resultsContainer = document.getElementById('eloChanges');
+        
+        let html = '<div class="game-results-summary">';
+        
+        // XP and level info
+        html += `
+            <div class="xp-results">
+                <h4>Experience Gained</h4>
+                <p>+${xpResult.xpEarned} XP</p>
+                <p>Total XP: ${xpResult.totalXP.toLocaleString()}</p>
+        `;
+        
+        if (xpResult.leveledUp) {
+            html += `<p class="level-up">🎉 Level Up! Now Level ${xpResult.newLevel}</p>`;
+        }
+        
+        html += '</div>';
+        
+        // Ranked results
+        if (rankedResult) {
+            const eloChangeText = rankedResult.eloChange >= 0 ? 
+                `+${rankedResult.eloChange}` : `${rankedResult.eloChange}`;
+            
+            html += `
+                <div class="ranked-results">
+                    <h4>Ranked Results</h4>
+                    <p>ELO Change: ${eloChangeText}</p>
+                    <p>New ELO: ${rankedResult.newElo}</p>
+                    <p>Rank: ${rankedResult.newRank}</p>
+            `;
+            
+            if (rankedResult.isPlacementComplete) {
+                html += `<p class="placement-complete">🏆 Placement matches complete!</p>`;
+            }
+            
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        resultsContainer.innerHTML = html;
     }
     
     // Debug/admin functions
