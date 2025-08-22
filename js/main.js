@@ -398,7 +398,7 @@ class GameApp {
         // Game settings based on mode
         const gameSettings = {
             gameMode: this.currentGameMode,
-            startingChips: this.currentGameMode === 'ranked' ? 500 : 5000
+            startingChips: this.currentGameMode === 'ranked' ? 500 : 500
         };
         
         // Initialize poker game with settings
@@ -437,7 +437,7 @@ class GameApp {
             },
             {
                 title: "Game Flow",
-                content: "Each player starts with $5,000 in chips. The game uses standard poker rules with blinds that increase the action."
+                content: "Each player starts with $500 in chips. The game uses standard poker rules with blinds that increase the action."
             },
             {
                 title: "Betting Actions",

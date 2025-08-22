@@ -3,7 +3,7 @@
 class AIPlayer {
     constructor(name, difficulty = 'medium') {
         this.name = name;
-        this.chips = 5000;
+        this.chips = 500;
         this.hand = [];
         this.folded = false;
         this.allIn = false;
@@ -297,24 +297,141 @@ class AIPlayer {
 
 // AI Name Generator
 class AINameGenerator {
-    static names = [
-        'Alex', 'Blake', 'Casey', 'Dana', 'Drew', 'Ellis', 'Finley', 'Grey',
-        'Harper', 'Indiana', 'Jett', 'Kai', 'Lane', 'Morgan', 'Nova', 'Onyx',
-        'Parker', 'Quinn', 'River', 'Sage', 'Taylor', 'Uma', 'Vale', 'West',
-        'Zane', 'Storm', 'Raven', 'Phoenix', 'Frost', 'Blaze', 'Shadow', 'Echo'
+    // Professional/Competitive AI names
+    static competitiveNames = [
+              "zippersman","xxkirtoxx1","togoz","MyWorld_21","JuicyJamz","qozz","JuiceWrldMoonlight","boopsma1","UnstoppableAnarchy","smollost43432X","Xx_MilkShake17Xx","vibeless19","x23","flwr","powf","sinless","mattyboy784","xkirt0","BigHeavy00","JpingMagz","easilymossedkid20","unknown_magz","284962G7","juli23_zae","J_Y3E","easilymossedkid19","uqz","poofusure","QTW1NN","circuIator","grandsontoldmetoplay","RoboStud22","GlobalWRA893","gaslightying","ii_cantsackii","ItsMeDooDoos","Bxx_Duck","XxFrench_Fr1ezX","Revruics","rxd_deer","lqzt_sou1z","arrowstops","HeartlessTierra","thefabisasoXD","ii_cantrunnerii","roblox_user_78045342","unlocked1_2","jalenHurts_RB7","QzccMustDestroy","globalseller","RisingPhoenix","snagz","umppz2",
+      "LilTycoon94","EpicGamer_072","xXBuildBroXx","AquaDude33","FlamezKnight","CookieNomNom","PixelSurge","HyperNova_99","TacoSlayer42","NinjaSocks","DankDestroyer","SlippyPenguin7","ToxicDriftX","CoolBanana_05","WolfStorm88","Jumpman_14","EliteSniper_RBLX","KrazyKoala123","CodeRedYT","MysticSlayer", "L",
+    "kupid",
+    "l0st",
+    "jayleng",
+    "weweewew",
+    "RisingPhoinex87",
+    "dr.1",
+    "prot",
+    "hunt",
+    "kif",
+    "?",
+    "rivverott",
+    "1x Dark",
+    "Moxxy!",
+    "ä",
+    "شغثغخ",
+    "dark!",
+    "Vortex",
+    "FlickMaster17",
+    "r",
+    "Skywave!",
+    "R3tr0",
+    "TurboClash893",
+    "Zynk",
+    "Null_Force",
+    "Orbital",
+    "Boosted",
+    "GravyTrain",
+    "NitroNinja",
+    "PixelPlay",
+    "PhantomX",
+    "Fury",
+    "Zero!",
+    "Moonlight",
+    "QuickTap",
+    "v1per",
+    "Slugger",
+    "MetaDrift",
+    "Hydra",
+    "Neo!",
+    "ShadowDart",
+    "SlipStream",
+    "F1ick",
+    "Karma",
+    "Sparkz",
+    "Glitch",
+    "Dash7",
+    "Ignite",
+    "Cyclone",
+    "Nova",
+    "Opt1c",
+    "Viral",
+    "Stormz",
+    "PyroBlast",
+    "Bl1tz",
+    "Echo",
+    "Hover",
+    "PulseRider"
     ];
     
-    static suffixes = [
-        'Pro', 'King', 'Queen', 'Ace', 'Shark', 'Wolf', 'Fox', 'Hawk',
-        'Steel', 'Gold', 'Diamond', 'Thunder', 'Lightning', 'Fire', 'Ice'
+    // Casual/Friendly AI names
+    static casualNames = [
+        "L",
+    "kupid",
+    "l0st",
+    "jayleng",
+    "weweewew",
+    "RisingPhoinex87",
+    "dr.1",
+    "prot",
+    "hunt",
+    "kif",
+    "?",
+    "rivverott",
+    "1x Dark",
+    "Moxxy!",
+    "ä",
+    "شغثغخ",
+    "dark!",
+    "Vortex",
+    "FlickMaster17",
+    "r",
+    "Skywave!",
+    "R3tr0",
+    "TurboClash893",
+    "Zynk",
+    "Null_Force",
+    "Orbital",
+    "Boosted",
+    "GravyTrain",
+    "NitroNinja",
+    "PixelPlay",
+    "PhantomX",
+    "Fury",
+    "Zero!",
+    "Moonlight",
+    "QuickTap",
+    "v1per",
+    "Slugger",
+    "MetaDrift",
+    "Hydra",
+    "Neo!",
+    "ShadowDart",
+    "SlipStream",
+    "F1ick",
+    "Karma",
+    "Sparkz",
+    "Glitch",
+    "Dash7",
+    "Ignite",
+    "Cyclone",
+    "Nova",
+    "Opt1c",
+    "Viral",
+    "Stormz",
+    "PyroBlast",
+    "Bl1tz",
+    "Echo",
+    "Hover",
+    "PulseRider", "yumi", "drali", "wez", "brickbybrick", "Rw9", "dark", "mawykzy!", "Speed", ".", "koto", "dani", "Qwert (OG)", "dr.k", "Void", "moon.", "Lru", "Kha0s", "rising.", "?", "dynamo", "f", "Hawk!", "newpo", "zen", "v", "a7md", "sieko", "Mino", "dyinq", "toxin", "Bez", "velocity", "Chronic", "Flinch", "vatsi", "Xyzle", "ca$h", "Darkmode", "nu3.", "LetsG0Brand0n", "VAWQK.", "helu30", "wizz", "Sczribbles.", "7up", "unkown", "t0es", "Jynx.", "Zapz", "Aur0", "Knight", "Cliqz", "Pyro.", "dash!", "ven", "flow.", "zenith", "volty", "Aqua!", "Styx", "cheeseboi", "Heat.", "Slyde", "fl1p", "Otto", "jetz", "Crisp", "snailracer", "Flickz", "tempo", "Blaze.", "skyfall", "steam", "storm", "rek:3", "vyna1", "deltairlines", "ph", "trace", "avidic", "tekk!", "fluwo", "climp?", "zark", "diza", "O", "Snooze", "gode", "cola", "hush(!)", "sh4oud", "vvv", "critt", "darkandlost2009", "pulse jubbo", "pl havicic", "ryft.", "Lyric", "dryft.", "horiz", "zeno", "octane", "wavetidess", "loster", "mamba", "Jack", "innadeze", "s", "offtenlost", "bivo", "Trace", "Talon", ".", "{?}", "rraze", "Dark{?}", "zenhj", "rinshoros bf", "Cipher", "nova", "juzz", "officer", "strike", "Titan", "comp", "pahnton", "Mirage", "space", "boltt", "reeper", "piza", "cheese.", "frostbite", "warthunderisbest", "eecipe", "quantum", "vexz", "zylo", "frzno", "blurr", "scythe!", "wvr", "nxt", "griz", "jolt", "sift", "kryo", "wvn", "brixx", "twixt", "nyx", "slyth", "drex", "qwi", "voxx", "triz", "jynx", "plyx", "kryp", "zex", "brix", "twixz", "vyn", "sypher", "jyn", "qry", "neoo", "kwpid"
+
     ];
     
     static getRandomName() {
-        const name = this.names[Math.floor(Math.random() * this.names.length)];
-        const suffix = Math.random() < 0.3 ? this.suffixes[Math.floor(Math.random() * this.suffixes.length)] : '';
+        // 70% chance for competitive names, 30% for casual names
+        const nameList = Math.random() < 0.7 ? this.competitiveNames : this.casualNames;
+        const name = nameList[Math.floor(Math.random() * nameList.length)];
+        
+        // Add a number suffix for uniqueness (20% chance)
         const number = Math.random() < 0.2 ? Math.floor(Math.random() * 99) + 1 : '';
         
-        return suffix ? `${name}${suffix}${number}` : `${name}${number}`;
+        return number ? `${name}${number}` : name;
     }
     
     static generateUniqueNames(count) {

@@ -19,7 +19,7 @@ class PokerGame {
         this.lastAggressor = -1; // Index of last player to raise
         
         // Game settings from main app
-        this.startingChips = gameSettings.startingChips || 5000;
+        this.startingChips = gameSettings.startingChips || 500;
         this.gameMode = gameSettings.gameMode || 'casual';
         
         this.initializeElements();
