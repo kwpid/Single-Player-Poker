@@ -7,17 +7,50 @@ class EloSystem {
     
     constructor() {
         this.playerRating = this.loadPlayerRating();
+        console.log('EloSystem initialized with rating:', this.playerRating);
     }
     
     loadPlayerRating() {
-        return Utils.loadGameData('playerElo', EloSystem.DEFAULT_RATING);
+        const rating = Utils.loadGameData('playerElo', EloSystem.DEFAULT_RATING);
+        console.log('Loaded player ELO from storage:', rating);
+        
+        // If no rating found, try to recover from backup
+        if (rating === EloSystem.DEFAULT_RATING) {
+            const backupRating = Utils.loadGameData('playerEloBackup', null);
+            if (backupRating && backupRating !== EloSystem.DEFAULT_RATING) {
+                console.log('Recovering ELO from backup:', backupRating);
+                Utils.saveGameData('playerElo', backupRating);
+                return backupRating;
+            }
+        }
+        
+        return rating;
     }
     
     savePlayerRating() {
+        console.log('Saving player ELO to storage:', this.playerRating);
         Utils.saveGameData('playerElo', this.playerRating);
+        
+        // Also save to a backup key to ensure persistence
+        Utils.saveGameData('playerEloBackup', this.playerRating);
+        Utils.saveGameData('playerEloTimestamp', Date.now());
+        
+        // Verify the save was successful
+        const verifyRating = Utils.loadGameData('playerElo', null);
+        if (verifyRating !== this.playerRating) {
+            console.error('ELO save verification failed! Expected:', this.playerRating, 'Got:', verifyRating);
+            // Try to save again
+            Utils.saveGameData('playerElo', this.playerRating);
+        }
     }
     
     getPlayerRating() {
+        // Always get the latest from storage to ensure consistency
+        const storedRating = Utils.loadGameData('playerElo', this.playerRating);
+        if (storedRating !== this.playerRating) {
+            console.log('ELO mismatch detected, updating from storage:', storedRating);
+            this.playerRating = storedRating;
+        }
         return this.playerRating;
     }
     
