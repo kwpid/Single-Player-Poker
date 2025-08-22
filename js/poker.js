@@ -147,6 +147,9 @@ class PokerGame {
         
         this.showMessage('New hand starting...', 2000);
         
+        // Clear previous cards from UI
+        this.clearAllCards();
+        
         // Reset hand state
         this.deck = new Utils.Deck();
         this.communityCards = [];
@@ -175,7 +178,7 @@ class PokerGame {
         this.postBlinds();
         
         // Deal cards
-        setTimeout(() => this.dealHoleCards(), 1000);
+        setTimeout(() => this.dealHoleCards(), 1500);
     }
     
     postBlinds() {
@@ -232,6 +235,33 @@ class PokerGame {
         
         this.displayPlayerCards();
         setTimeout(() => this.startBettingRound(), 1000);
+    }
+    
+    clearAllCards() {
+        // Clear community cards
+        const cardElements = this.communityCardsArea.children;
+        for (let i = 0; i < cardElements.length; i++) {
+            cardElements[i].className = 'card hidden';
+            cardElements[i].innerHTML = '';
+        }
+        
+        // Clear player cards
+        this.playerCard1.className = 'card hidden';
+        this.playerCard1.innerHTML = '';
+        this.playerCard2.className = 'card hidden';
+        this.playerCard2.innerHTML = '';
+        
+        // Clear AI player cards
+        for (let i = 1; i < this.players.length; i++) {
+            const playerElement = document.getElementById(`player-${this.players[i].name}`);
+            if (playerElement) {
+                const cards = playerElement.querySelectorAll('.opponent-cards .card');
+                cards.forEach(card => {
+                    card.className = 'card hidden';
+                    card.innerHTML = '';
+                });
+            }
+        }
     }
     
     displayPlayerCards() {
@@ -487,12 +517,12 @@ class PokerGame {
         }
         
         this.displayCommunityCards();
-        this.showMessage('Flop dealt', 1500);
+        this.showMessage('Flop dealt', 2000);
         
         // First to act is first active player after dealer
         this.currentPlayerIndex = this.getFirstToAct();
         
-        setTimeout(() => this.startBettingRound(), 1500);
+        setTimeout(() => this.startBettingRound(), 2000);
     }
     
     dealTurn() {
@@ -534,8 +564,10 @@ class PokerGame {
         
         for (let i = 0; i < this.communityCards.length; i++) {
             if (cardElements[i]) {
-                this.displayCard(cardElements[i], this.communityCards[i]);
-                Utils.playSound('card');
+                setTimeout(() => {
+                    this.displayCard(cardElements[i], this.communityCards[i]);
+                    Utils.playSound('card');
+                }, i * 200); // Slight delay between each card for better animation
             }
         }
     }
