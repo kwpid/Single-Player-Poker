@@ -89,10 +89,33 @@ class PokerGame {
         const aiNames = AINameGenerator.generateUniqueNames(numPlayers - 1);
         const difficulties = ['easy', 'medium', 'hard'];
         
+        // Get player's ELO to determine appropriate AI opponents
+        const playerElo = window.gameApp ? window.gameApp.eloSystem.getPlayerRating() : 1000;
+        
         for (let i = 0; i < numPlayers - 1; i++) {
             const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
             const aiPlayer = new AIPlayer(aiNames[i], difficulty);
             aiPlayer.position = i + 1;
+            
+            // Assign ELO based on game mode and difficulty
+            if (this.gameMode === 'ranked') {
+                // For ranked games, assign ELO based on difficulty and ensure it's not too high
+                const baseElo = 600; // Start at Bronze level
+                const difficultyMultiplier = difficulty === 'easy' ? 0.8 : difficulty === 'medium' ? 1.0 : 1.2;
+                aiPlayer.elo = Math.floor(baseElo * difficultyMultiplier + Math.random() * 200);
+            } else {
+                // For casual games, assign random ELO that won't conflict with leaderboard
+                // unless player is close in ELO range (within 200 points)
+                const eloDifference = Math.abs(playerElo - 1000); // Base comparison
+                if (eloDifference <= 200) {
+                    // Player is close to base ELO, can use some leaderboard names
+                    aiPlayer.elo = Math.floor(800 + Math.random() * 400); // 800-1200 range
+                } else {
+                    // Player is far from base ELO, avoid leaderboard conflicts
+                    aiPlayer.elo = Math.floor(400 + Math.random() * 300); // 400-700 range
+                }
+            }
+            
             this.players.push(aiPlayer);
         }
         
@@ -126,6 +149,13 @@ class PokerGame {
         playerDiv.id = `player-${player.name}`;
         
         const infoDiv = Utils.createElement('div', 'opponent-info');
+        
+        // Add ELO display for ranked games (above name)
+        if (this.gameMode === 'ranked' && !player.isHuman) {
+            const eloDiv = Utils.createElement('div', 'opponent-elo', `${player.elo || 1000} ELO`);
+            infoDiv.appendChild(eloDiv);
+        }
+        
         const nameDiv = Utils.createElement('div', 'opponent-name', player.name);
         const chipsDiv = Utils.createElement('div', 'opponent-chips', 
             `<i class="fas fa-coins"></i>$<span class="chip-amount">${Utils.formatMoney(player.chips)}</span>`);

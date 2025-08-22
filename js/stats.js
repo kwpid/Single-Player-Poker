@@ -39,6 +39,11 @@ class StatsSystem {
                 Utils.saveGameData(key, defaultValue);
             }
         }
+        
+        // Initialize match history if it doesn't exist
+        if (!Utils.loadGameData('matchHistory')) {
+            Utils.saveGameData('matchHistory', []);
+        }
     }
 
     // XP System - 1.25x threshold progression
@@ -102,6 +107,7 @@ class StatsSystem {
         Utils.saveGameData('totalXP', newXP);
         
         // Update level
+        const oldLevel = Utils.loadGameData('currentLevel', 1);
         const newLevel = this.getCurrentLevel();
         Utils.saveGameData('currentLevel', newLevel);
         
@@ -109,7 +115,73 @@ class StatsSystem {
             xpEarned: xpEarned,
             totalXP: newXP,
             newLevel: newLevel,
-            leveledUp: newLevel > Utils.loadGameData('currentLevel', 1)
+            leveledUp: newLevel > oldLevel
+        };
+    }
+
+    // Record a completed game in match history
+    recordGame(gameData) {
+        const matchHistory = Utils.loadGameData('matchHistory', []);
+        
+        const matchRecord = {
+            id: Date.now() + Math.random(), // Unique ID
+            timestamp: Date.now(),
+            gameMode: gameData.gameMode || 'casual',
+            placement: gameData.placement,
+            totalPlayers: gameData.totalPlayers,
+            startingChips: gameData.startingChips || 500,
+            finalChips: gameData.finalChips || 0,
+            eloChange: gameData.eloChange || 0,
+            eloBefore: gameData.eloBefore || 1000,
+            eloAfter: gameData.eloAfter || 1000,
+            duration: gameData.duration || 0, // Game duration in seconds
+            handsPlayed: gameData.handsPlayed || 0,
+            biggestPot: gameData.biggestPot || 0,
+            allInCount: gameData.allInCount || 0,
+            foldCount: gameData.foldCount || 0,
+            raiseCount: gameData.raiseCount || 0,
+            callCount: gameData.callCount || 0
+        };
+        
+        // Add to beginning of array (most recent first)
+        matchHistory.unshift(matchRecord);
+        
+        // Keep only last 10 games to prevent excessive storage
+        if (matchHistory.length > 10) {
+            matchHistory.splice(10);
+        }
+        
+        Utils.saveGameData('matchHistory', matchHistory);
+        
+        return matchRecord;
+    }
+
+    // Get match history (last N games, optionally filtered by game mode)
+    getMatchHistory(limit = 5, gameMode = null) {
+        const matchHistory = Utils.loadGameData('matchHistory', []);
+        
+        let filteredHistory = matchHistory;
+        
+        // Filter by game mode if specified
+        if (gameMode && gameMode !== 'all') {
+            filteredHistory = matchHistory.filter(match => match.gameMode === gameMode);
+        }
+        
+        // Return last N games
+        return filteredHistory.slice(0, limit);
+    }
+
+    // Get match history summary for stats display
+    getMatchHistorySummary() {
+        const allMatches = this.getMatchHistory(10, 'all');
+        const casualMatches = this.getMatchHistory(10, 'casual');
+        const rankedMatches = this.getMatchHistory(10, 'ranked');
+        
+        return {
+            total: allMatches.length,
+            casual: casualMatches.length,
+            ranked: rankedMatches.length,
+            recent: allMatches.slice(0, 5) // Last 5 games
         };
     }
 

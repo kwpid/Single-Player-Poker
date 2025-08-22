@@ -208,12 +208,19 @@ class AIPlayer {
                 }
             }
             
+            // Safety check: ensure callAmount is valid
+            if (callAmount < 0) {
+                return { action: 'check' };
+            }
+            
             if (adjustedStrength < this.personality.foldThreshold) {
                 return { action: 'fold' };
             } else if (adjustedStrength > this.personality.raiseThreshold) {
                 return this.decideRaiseAmount(potSize, bettingRound);
             } else if (potOdds < adjustedStrength || callAmount <= this.chips * 0.1) {
-                return { action: 'call', amount: callAmount };
+                // Ensure call amount doesn't exceed chips
+                const safeCallAmount = Math.min(callAmount, this.chips);
+                return { action: 'call', amount: safeCallAmount };
             } else {
                 return { action: 'fold' };
             }
@@ -247,25 +254,38 @@ class AIPlayer {
         const minRaise = Math.max(50, potSize * 0.3);
         const maxRaise = Math.min(this.chips, potSize * 1.2);
         
+        // Ensure minRaise doesn't exceed what AI can afford
+        const adjustedMinRaise = Math.min(minRaise, this.chips);
+        const adjustedMaxRaise = Math.min(maxRaise, this.chips);
+        
+        // If AI can't afford minimum raise, they should fold or call
+        if (adjustedMinRaise > this.chips) {
+            return { action: 'fold' };
+        }
+        
         let raiseSize;
         if (this.handStrength > 0.8) {
             // Strong hand - bet for value
-            raiseSize = minRaise + (maxRaise - minRaise) * 0.6;
+            raiseSize = adjustedMinRaise + (adjustedMaxRaise - adjustedMinRaise) * 0.6;
         } else if (this.handStrength < 0.3) {
             // Bluff - smaller size
-            raiseSize = minRaise + (maxRaise - minRaise) * 0.3;
+            raiseSize = adjustedMinRaise + (adjustedMaxRaise - adjustedMinRaise) * 0.3;
         } else {
             // Medium strength - variable sizing
-            raiseSize = minRaise + (maxRaise - minRaise) * this.aggressiveness;
+            raiseSize = adjustedMinRaise + (adjustedMaxRaise - adjustedMinRaise) * this.aggressiveness;
         }
         
         // Add some randomness
         raiseSize *= (0.8 + Math.random() * 0.4);
         raiseSize = Math.round(raiseSize / 25) * 25; // Round to nearest 25
         
+        // Final safety checks
+        raiseSize = Math.max(adjustedMinRaise, Math.min(adjustedMaxRaise, raiseSize));
+        raiseSize = Math.max(0, Math.min(this.chips, raiseSize)); // Never negative, never more than chips
+        
         return {
             action: 'raise',
-            amount: Math.max(minRaise, Math.min(maxRaise, raiseSize))
+            amount: raiseSize
         };
     }
     

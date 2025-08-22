@@ -965,3 +965,224 @@ body {
         font-size: 0.9rem;
     }
 }
+
+/* Stats Modal Styles */
+.stats-modal {
+    max-width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-section {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.stat-section h4 {
+    color: var(--accent-gold);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.stat-value {
+    color: var(--text-primary);
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.xp-progress {
+    margin-top: 1rem;
+}
+
+.xp-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-gold), var(--accent-orange));
+    transition: width 0.3s ease;
+}
+
+.xp-text {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Match History Styles */
+.match-history-section {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.match-history-section h4 {
+    color: var(--accent-gold);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.match-history-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.history-tab-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.history-tab-btn:hover {
+    background: var(--button-hover);
+    border-color: var(--accent-gold);
+}
+
+.history-tab-btn.active {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    border-color: var(--accent-gold);
+}
+
+.match-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.match-history-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.match-history-item:hover {
+    border-color: var(--accent-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px var(--shadow-dark);
+}
+
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.match-mode {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.match-mode.casual {
+    color: var(--accent-green);
+}
+
+.match-mode.ranked {
+    color: var(--accent-gold);
+}
+
+.match-placement {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--accent-gold);
+}
+
+.match-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.match-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.detail-value.positive {
+    color: var(--accent-green);
+}
+
+.detail-value.negative {
+    color: var(--accent-red);
+}
+
+.match-timestamp {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+/* Responsive adjustments for match history */
+@media (max-width: 768px) {
+    .match-history-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .match-details {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .match-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}

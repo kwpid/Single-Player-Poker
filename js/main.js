@@ -322,6 +322,9 @@ class GameApp {
         this.showScreen('queueScreen');
         this.queueStartTime = Date.now();
         
+        // Reset queue display to initial state
+        this.resetQueueDisplay();
+        
         // Random queue time between 10-20 seconds
         const queueDuration = 10000 + Math.random() * 10000; // 10-20 seconds
         
@@ -335,6 +338,29 @@ class GameApp {
         
         // Add some realistic queue events
         this.addQueueEvents(queueDuration);
+    }
+
+    resetQueueDisplay() {
+        // Reset queue header and text to initial state
+        const queueHeader = document.querySelector('.queue-header h2');
+        const queueText = document.querySelector('.queue-header p');
+        
+        if (queueHeader) {
+            queueHeader.innerHTML = '<i class="fas fa-search"></i> Finding Game...';
+            queueHeader.style.color = '';
+        }
+        
+        if (queueText) {
+            queueText.textContent = this.currentGameMode === 'ranked' ? 
+                'Searching for opponents in ranked mode' : 
+                'Searching for opponents in casual mode';
+        }
+        
+        // Reset queue timer
+        const queueTime = document.getElementById('queueTime');
+        if (queueTime) {
+            queueTime.textContent = '0:00';
+        }
     }
     
     startQueueTimer() {
@@ -575,6 +601,12 @@ class GameApp {
         document.getElementById('xpProgress').style.width = stats.progression.progress + '%';
         document.getElementById('xpText').textContent = 
             `${stats.progression.currentXP} / ${stats.progression.neededXP} XP`;
+        
+        // Populate match history
+        this.populateMatchHistory('all');
+        
+        // Add event listeners for match history tabs
+        this.setupMatchHistoryTabs();
     }
     
     populateRankedModal() {
@@ -766,6 +798,27 @@ class GameApp {
         // Record stats and award XP
         const xpResult = this.statsSystem.recordGameResult(placement, totalPlayers, isRanked, gameResult.playerElo);
         
+        // Record match history
+        const matchData = {
+            gameMode: gameResult.gameMode,
+            placement: placement,
+            totalPlayers: totalPlayers,
+            startingChips: gameResult.startingChips || 500,
+            finalChips: gameResult.finalChips || 0,
+            eloChange: gameResult.eloChange || 0,
+            eloBefore: gameResult.playerElo || 1000,
+            eloAfter: gameResult.playerElo + (gameResult.eloChange || 0),
+            duration: gameResult.duration || 0,
+            handsPlayed: gameResult.handsPlayed || 0,
+            biggestPot: gameResult.biggestPot || 0,
+            allInCount: gameResult.allInCount || 0,
+            foldCount: gameResult.foldCount || 0,
+            raiseCount: gameResult.raiseCount || 0,
+            callCount: gameResult.callCount || 0
+        };
+        
+        this.statsSystem.recordGame(matchData);
+        
         // Handle ranked game result
         let rankedResult = null;
         if (isRanked) {
@@ -925,6 +978,136 @@ class GameApp {
         if (this.currentScreen === 'leaderboard') {
             this.populateLeaderboardModal();
         }
+    }
+
+    setupMatchHistoryTabs() {
+        const tabButtons = document.querySelectorAll('.history-tab-btn');
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Remove active class from all tabs
+                tabButtons.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked tab
+                e.target.classList.add('active');
+                
+                // Get the tab type and populate history
+                const tabType = e.target.dataset.historyTab;
+                this.populateMatchHistory(tabType);
+            });
+        });
+    }
+
+    populateMatchHistory(gameMode = 'all') {
+        const matchHistoryList = document.getElementById('matchHistoryList');
+        const matches = this.statsSystem.getMatchHistory(5, gameMode);
+        
+        if (matches.length === 0) {
+            matchHistoryList.innerHTML = `
+                <div class="match-history-item" style="text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>No ${gameMode === 'all' ? '' : gameMode} games played yet.</p>
+                    <p>Start playing to see your match history!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        matches.forEach(match => {
+            const placementText = this.getPlacementText(match.placement);
+            const gameModeIcon = match.gameMode === 'ranked' ? 'fas fa-crown' : 'fas fa-gamepad';
+            const gameModeClass = match.gameMode === 'ranked' ? 'ranked' : 'casual';
+            const timestamp = this.formatTimestamp(match.timestamp);
+            
+            html += `
+                <div class="match-history-item">
+                    <div class="match-header">
+                        <div class="match-mode ${gameModeClass}">
+                            <i class="${gameModeIcon}"></i>
+                            ${match.gameMode.charAt(0).toUpperCase() + match.gameMode.slice(1)}
+                        </div>
+                        <div class="match-placement">${placementText}</div>
+                    </div>
+                    
+                    <div class="match-details">
+                        <div class="match-detail">
+                            <span class="detail-label">Players</span>
+                            <span class="detail-value">${match.totalPlayers}</span>
+                        </div>
+                        <div class="match-detail">
+                            <span class="detail-label">Final Chips</span>
+                            <span class="detail-value">$${Utils.formatMoney(match.finalChips)}</span>
+                        </div>
+                        <div class="match-detail">
+                            <span class="detail-label">ELO Change</span>
+                            <span class="detail-value ${match.eloChange >= 0 ? 'positive' : 'negative'}">
+                                ${match.eloChange >= 0 ? '+' : ''}${match.eloChange}
+                            </span>
+                        </div>
+                        <div class="match-detail">
+                            <span class="detail-label">Duration</span>
+                            <span class="detail-value">${this.formatDuration(match.duration)}</span>
+                        </div>
+                        ${match.handsPlayed > 0 ? `
+                        <div class="match-detail">
+                            <span class="detail-label">Hands Played</span>
+                            <span class="detail-value">${match.handsPlayed}</span>
+                        </div>
+                        ` : ''}
+                        ${match.biggestPot > 0 ? `
+                        <div class="match-detail">
+                            <span class="detail-label">Biggest Pot</span>
+                            <span class="detail-value">$${Utils.formatMoney(match.biggestPot)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="match-timestamp">${timestamp}</div>
+                </div>
+            `;
+        });
+        
+        matchHistoryList.innerHTML = html;
+    }
+
+    getPlacementText(placement) {
+        const placementMap = {
+            1: '🥇 1st',
+            2: '🥈 2nd', 
+            3: '🥉 3rd',
+            4: '4th',
+            5: '5th'
+        };
+        return placementMap[placement] || `${placement}th`;
+    }
+
+    formatTimestamp(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        
+        return date.toLocaleDateString();
+    }
+
+    formatDuration(seconds) {
+        if (!seconds || seconds < 60) return '< 1 min';
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        
+        if (minutes < 60) {
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        return `${hours}:${remainingMinutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
 }
 
